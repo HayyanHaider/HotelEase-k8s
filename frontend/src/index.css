@@ -1,0 +1,412 @@
+/* BookSmart Color Scheme */
+:root {
+  --BookSmart-red: #FF385C;
+  --BookSmart-dark-red: #E31C5F;
+  --BookSmart-black: #222222;
+  --BookSmart-gray: #717171;
+  --BookSmart-light-gray: #DDDDDD;
+  --BookSmart-bg-gray: #F7F7F7;
+  --BookSmart-white: #FFFFFF;
+  --BookSmart-green: #00A699;
+  --BookSmart-blue: #0088CC;
+}
+
+/* Global Styles */
+body {
+  font-family: 'Circular', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--BookSmart-black);
+  /* Light background that contrasts with navbar lavender gradient */
+  background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 50%, #e8e8e8 100%);
+  background-attachment: fixed;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  max-width: 100%;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+/* Custom Button Styles */
+.btn-BookSmart {
+  background-color: var(--BookSmart-red);
+  border-color: var(--BookSmart-red);
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 12px 24px;
+  transition: all 0.2s ease;
+}
+
+.btn-BookSmart:hover {
+  background-color: var(--BookSmart-dark-red);
+  border-color: var(--BookSmart-dark-red);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 56, 92, 0.3);
+}
+
+.btn-BookSmart-outline {
+  background-color: transparent;
+  border: 1px solid var(--BookSmart-black);
+  color: var(--BookSmart-black);
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 12px 24px;
+  transition: all 0.2s ease;
+}
+
+.btn-BookSmart-outline:hover {
+  background-color: var(--BookSmart-black);
+  border-color: var(--BookSmart-black);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 34, 34, 0.3);
+}
+
+/* Custom Form Styles */
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-control,
+.form-select {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(227, 234, 248, 0.6);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: #a8b5e8;
+  box-shadow: 0 0 0 0.2rem rgba(168, 181, 232, 0.25);
+}
+
+/* Prevent autofill from changing background color */
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:hover,
+.form-control:-webkit-autofill:focus,
+.form-control:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px rgba(255, 255, 255, 0.8) inset !important;
+  box-shadow: 0 0 0 30px rgba(255, 255, 255, 0.8) inset !important;
+  -webkit-text-fill-color: #222222 !important;
+}
+
+.form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Card Styles */
+.card-BookSmart {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.card-BookSmart:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Text Colors */
+.text-BookSmart-red {
+  color: var(--BookSmart-red) !important;
+}
+
+.text-BookSmart-gray {
+  color: var(--BookSmart-gray) !important;
+}
+
+.text-BookSmart-black {
+  color: var(--BookSmart-black) !important;
+}
+
+/* Background Colors */
+.bg-BookSmart-light {
+  background-color: var(--BookSmart-bg-gray) !important;
+}
+
+/* Custom Spacing */
+.py-section {
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2.5rem;
+  }
+  
+  .lead {
+    font-size: 1.1rem;
+  }
+}
+
+/* Global Responsive Utilities */
+@media (max-width: 576px) {
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Container padding */
+  .container,
+  .container-fluid {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* Touch-friendly buttons */
+  button, .btn, a.btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent zoom on input focus (iOS) */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Tablet specific */
+@media (min-width: 577px) and (max-width: 768px) {
+  .container,
+  .container-fluid {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+/* Custom Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Search Bar Enhancements */
+.search-bar {
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.search-bar .form-control {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.search-bar .form-control:focus {
+  box-shadow: none;
+}
+
+.search-bar .form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--BookSmart-black);
+  margin-bottom: 4px;
+}
+
+/* Category Icons */
+.category-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  transition: all 0.2s ease;
+}
+
+.category-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Property Cards */
+.property-card {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.property-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.property-card .card-img-top {
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.property-card:hover .card-img-top {
+  transform: scale(1.05);
+}
+
+/* Navbar Enhancements */
+.navbar,
+nav.navbar {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 40%, #d4d4d4 100%) !important;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.navbar-brand svg {
+  transition: transform 0.2s ease;
+}
+
+.navbar-brand:hover svg {
+  transform: scale(1.1);
+}
+
+/* Dropdown Enhancements */
+.dropdown-menu {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 40%, #d4d4d4 100%) !important;
+  border-bottom: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color) !important;
+}
+
+/* Ensure all dropdown menus get the navbar gradient */
+ul.dropdown-menu,
+.dropdown .dropdown-menu {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 40%, #d4d4d4 100%) !important;
+  border-bottom: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color) !important;
+}
+
+.dropdown-item {
+  padding: 12px 20px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: #1a1a1a;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  color: #007bff;
+}
+
+/* Loading States */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid var(--BookSmart-red);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Utility Classes */
+.shadow-BookSmart {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.shadow-BookSmart-lg {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+.border-radius-BookSmart {
+  border-radius: 12px !important;
+}
+
+.border-radius-BookSmart-lg {
+  border-radius: 16px !important;
+}
+
+/* Responsive Images */
+.img-responsive {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--BookSmart-gray);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--BookSmart-black);
+}
+
+/* Link Styles */
+a {
+  color: var(--BookSmart-red);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--BookSmart-dark-red);
+}
+
+/* Button Reset */
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid var(--BookSmart-red);
+  outline-offset: 2px;
+}
