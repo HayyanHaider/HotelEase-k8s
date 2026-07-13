@@ -1,121 +1,161 @@
-Here's a clean, concise version — copy-paste ready:
+# HotelEase — Kubernetes DevOps Project
 
-```markdown
-# HotelEase — DevOps Deployment
-
-A MERN-stack hotel booking app, containerized with Docker and deployed to an Azure VM with CI/CD via GitHub Actions.
+A MERN-stack hotel booking app, containerized with Docker and deployed to a local Kubernetes cluster (kind), covering storage, config management, ingress routing, autoscaling, and monitoring.
 
 ## Tech Stack
 - Frontend: React (Vite) + Nginx
 - Backend: Node.js + Express
-- Database: MongoDB Atlas
+- Database: MongoDB Atlas (real data) + in-cluster Mongo (storage practice)
 - File Storage: Cloudinary
-- Containerization: Docker, Docker Compose
-- Hosting: Azure VM (Ubuntu)
-- CI/CD: GitHub Actions
-- Domain: No-IP DDNS
+- Containerization: Docker
+- Orchestration: Kubernetes (kind — Kubernetes in Docker)
+- Ingress: NGINX Ingress Controller
+- Autoscaling: metrics-server + HPA
+- Monitoring: Prometheus + Grafana
 
 ## Architecture
 
 ```
-GitHub (push to main)
-        │
-        ▼
-GitHub Actions → SSH into VM → git pull → docker compose up --build -d
-        │
-        ▼
-Azure VM
- ┌─────────────────────────────┐
- │  Docker bridge network       │
- │  ┌──────────┐  ┌──────────┐ │
- │  │ frontend │─▶│ backend  │ │
- │  │ (Nginx)  │  │ (Express)│ │
- │  │ port 80  │  │ port 5000│ │
- │  └──────────┘  └────┬─────┘ │
- └────────────────────┼────────┘
-                       ▼
-              MongoDB Atlas (cloud)
+                        Browser
+                           │
+                           ▼
+                  ┌─────────────────┐
+                  │  Ingress (nginx) │
+                  │  /      /api     │
+                  └────┬─────────┬──┘
+                       │         │
+              ┌────────▼──┐  ┌───▼──────────┐
+              │ frontend-  │  │ backend      │
+              │ service    │  │ service      │
+              └────┬───────┘  └───┬──────────┘
+                   │              │
+              ┌────▼──────┐  ┌────▼────────┐
+              │ frontend  │  │ backend     │
+              │ pod (nginx)│  │ pod (Express)│
+              └───────────┘  └────┬────────┘
+                                  │
+                    ┌─────────────┼─────────────┐
+                    ▼             ▼             ▼
+                 Secret      ConfigMap    MongoDB Atlas
+              (credentials)  (settings)      (cloud)
+
+        Namespace: hotelease (everything above runs inside it)
 ```
 
+Separately, a `mongo-practice` Deployment + Service + PVC/PV exist purely to demonstrate storage concepts (ephemeral vs static PV vs dynamic PV) — it is not used by the real app, which connects to MongoDB Atlas.
+
 ## Project Structure
+
 ```
 HotelEase-devops/
 ├── backend/
-│   ├── Dockerfile
-│   └── .env (gitignored)
+│   └── Dockerfile
 ├── frontend/
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   └── .env (gitignored)
-├── docker-compose.yml
-└── .github/workflows/deploy.yml
+│   └── Dockerfile
+├── k8s/
+│   ├── namespace.yml
+│   ├── backend-deployment.yml
+│   ├── backend-service.yml
+│   ├── frontend-deployment.yml
+│   ├── frontend-service.yml
+│   ├── secret.yml            (gitignored — real credentials)
+│   ├── secret.example.yml    (template, safe to commit)
+│   ├── configmap.yml
+│   ├── mongo-deployment.yml
+│   ├── mongo-service.yml
+│   ├── mongo-pv.yml
+│   ├── mongo-pvc.yml
+│   ├── mongo-pvc-dynamic.yml
+│   └── ingress.yml
+├── kind-config.yml
+└── docker-compose.yml        (legacy — pre-Kubernetes setup)
 ```
 
-## Docker Setup
+## What's been built so far
 
-**Backend Dockerfile** — `node:18-alpine`. Copies `package*.json` and runs `npm install` before copying source code, so dependency installation is cached and only reruns when `package.json` changes.
+### Phase 1 — Cluster setup + core deployments
+- Created a local `kind` cluster with port mappings (80/443) for later Ingress use
+- Created the `hotelease` namespace
+- Built backend and frontend Docker images and loaded them into the cluster
+- Deployed backend as a Kubernetes Deployment
 
-**Frontend Dockerfile** — multi-stage build. Stage 1 (`node:20-alpine`) builds the React app. Stage 2 (`nginx:alpine`) serves only the built static files — keeping the final image small.
+### Phase 2 — Storage
+- Practiced all three storage patterns on a throwaway Mongo pod:
+  - **Ephemeral** (`emptyDir`) — data lost on pod restart
+  - **Static PV/PVC** (hostPath) — manually created volume, survives pod restarts
+  - **Dynamic PV** — PVC requests storage from a StorageClass, PV auto-provisioned on first use (`WaitForFirstConsumer`)
+- Added an `emptyDir` volume to the backend for a temp cache folder
 
-**docker-compose.yml** — runs `backend` and `frontend` on a shared bridge network, so the frontend can reach the backend at `http://backend:5000` by container name. No database container — the app connects directly to MongoDB Atlas.
+### Phase 3 — Secrets + ConfigMaps
+- Created a Secret for sensitive values (`MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_API_SECRET`)
+- Created a ConfigMap for non-sensitive config (`PORT`, `CLOUDINARY_CLOUD_NAME`, `FRONTEND_URL`)
+- Injected both into the backend two ways: as environment variables, and as a mounted volume
+- Confirmed backend connects to real MongoDB Atlas and Cloudinary using these injected values
 
-**nginx.conf** — serves the React build and reverse-proxies `/api/`, `/uploads/`, `/invoices/` to the backend container. Falls back to `index.html` for client-side routing.
+### Phase 4 — Ingress + Ingress Controller
+- Installed the NGINX Ingress Controller (kind-specific manifest)
+- Created `frontend-deployment.yml` / `frontend-service.yml` (frontend wasn't running in-cluster until this phase)
+- Created `backend-service.yml` so the backend Deployment was reachable by a stable name
+- Wrote path-based Ingress rules: `/` → frontend, `/api` → backend
+
+**Debugging note worth keeping:** the frontend's nginx config (baked in from the old Docker Compose setup) had a hardcoded reverse-proxy rule expecting an upstream host literally named `backend`. Kubernetes only resolves a Service by its exact name, so naming the backend Service `backend-service` caused an unresolvable-host crash (`CrashLoopBackOff`). Fixed by naming the Service `backend` instead of rebuilding the image. Also had to remove the Ingress `rewrite-target: /` annotation, since the backend's Express routes expect the full `/api/...` path rather than a rewritten one.
+
+## What's next
+
+### Phase 5 — Metrics + autoscaling
+- Install metrics-server, use `kubectl top` for live pod/node resource usage
+- Set resource `requests`/`limits` on deployments
+- Configure a standard Horizontal Pod Autoscaler (HPA) based on CPU
+
+### Phase 6 — Monitoring + custom-metric scaling
+- Deploy Prometheus + Grafana
+- Build a custom-metric HPA (e.g. scaling on queue length instead of CPU)
+- Final polish: architecture diagram, this README, final push
 
 ## Environment Variables
 
-`backend/.env`:
+`backend` Secret (`k8s/secret.yml`, gitignored) / ConfigMap (`k8s/configmap.yml`):
 ```
 MONGO_URI=
-PORT=5000
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-EMAIL_SERVICE=
-EMAIL_USER=
-EMAIL_PASSWORD=
-FRONTEND_ORIGINS=
-FRONTEND_URL=
-BACKEND_BASE_URL=
 JWT_SECRET=
+CLOUDINARY_API_SECRET=
+PORT=
+CLOUDINARY_CLOUD_NAME=
+FRONTEND_URL=
 ```
+See `k8s/secret.example.yml` for the Secret template — encode real values with `echo -n "value" | base64` before use.
 
-`frontend/.env`:
-```
-VITE_API_ORIGIN=
-```
-> Vite env variables are baked in at build time — set this before running `docker compose up --build`.
+## Run locally
 
-## Run Locally
 ```bash
-git clone https://github.com/HayyanHaider/HotelEase-devops.git
-cd HotelEase-devops
-# add .env files as shown above
-docker compose up --build
+git clone https://github.com/<your-username>/hotelease-devops.git
+cd hotelease-devops
+
+# create the cluster
+kind create cluster --name hotelease --config kind-config.yml
+
+# build + load images
+docker build -t hotelease-backend:v1 ./backend
+docker build -t hotelease-frontend:v1 ./frontend
+kind load docker-image hotelease-backend:v1 --name hotelease
+kind load docker-image hotelease-frontend:v1 --name hotelease
+
+# apply manifests
+kubectl apply -f k8s/namespace.yml
+kubectl apply -f k8s/secret.yml       # copy from secret.example.yml first
+kubectl apply -f k8s/configmap.yml
+kubectl apply -f k8s/backend-deployment.yml
+kubectl apply -f k8s/backend-service.yml
+kubectl apply -f k8s/frontend-deployment.yml
+kubectl apply -f k8s/frontend-service.yml
+
+# install ingress controller
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+kubectl apply -f k8s/ingress.yml
 ```
-App runs at `http://localhost`.
 
-## Deploy to VM
-```bash
-ssh -i <key.pem> <user>@<vm-host>
-git clone <repo-url>
-cd HotelEase-devops
-# add .env files
-docker compose up --build -d
-```
-Make sure ports `80` and `5000` are open in the VM's firewall/security group.
+App available at `http://localhost/`.
 
-## CI/CD
+## Legacy: Docker Compose deployment
 
-`.github/workflows/deploy.yml` runs on every push to `main`:
-1. Checks out the repo
-2. SSHs into the VM
-3. Runs `git pull` and `docker compose up --build -d`
-4. Health-checks the live URL
-
-GitHub Secrets required: `VM_SSH_KEY`, `VM_HOST`, `VM_USER`
-
-## Next Steps
-- [ ] SSL via Certbot
-- [ ] Horizontal scaling / load balancer
-- [ ] Migrate to AWS ECS/Fargate
-```
+Before this Kubernetes-based setup, the project was deployed as plain Docker containers on an Azure VM via GitHub Actions CI/CD. That workflow (`docker-compose.yml`, `.github/workflows/deploy.yml`) is kept in the repo for reference but is no longer the primary deployment path.
