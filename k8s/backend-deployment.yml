@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: hotelease
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: hotelease-backend:v1
+        imagePullPolicy: Never
+        env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: MONGO_URI
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: JWT_SECRET
+        - name: CLOUDINARY_API_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: CLOUDINARY_API_SECRET
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: PORT
+        - name: CLOUDINARY_CLOUD_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: CLOUDINARY_CLOUD_NAME
+        - name: FRONTEND_URL
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: FRONTEND_URL
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: temp-cache
+          mountPath: /app/temp
+        - name: config-volume
+          mountPath: /app/config
+      volumes:
+      - name: temp-cache
+        emptyDir: {}
+      - name: config-volume
+        configMap:
+          name: backend-config
