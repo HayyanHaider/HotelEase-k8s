@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: hotelease
+data:
+  PORT: "5000"
+  CLOUDINARY_CLOUD_NAME: "dxdw0fwlo"
+  FRONTEND_URL: "http://localhost:30080"
