@@ -50,6 +50,15 @@ spec:
               key: FRONTEND_URL
         ports:
         - containerPort: 5000
+        
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+
         volumeMounts:
         - name: temp-cache
           mountPath: /app/temp
