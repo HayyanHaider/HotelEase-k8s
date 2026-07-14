@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: hotelease-backend:v1
+        image: hotelease-backend:v2
         imagePullPolicy: Never
         env:
         - name: MONGO_URI

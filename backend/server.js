@@ -7,6 +7,28 @@ require("dotenv").config();
 dns.setDefaultResultOrder("ipv4first");
 
 const app = express();
+
+// --- Prometheus metrics setup ---
+const client = require('prom-client');
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+
+const httpRequestCounter = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Total HTTP requests',
+  labelNames: ['method', 'route', 'status'],
+});
+register.registerMetric(httpRequestCounter);
+
+app.use((req, res, next) => {
+  res.on('finish', () => {
+    httpRequestCounter.inc({ method: req.method, route: req.path, status: res.statusCode });
+  });
+  next();
+});
+// --- end Prometheus setup ---
+
+
 app.use(express.json());
 const allowedOrigins = (process.env.FRONTEND_ORIGINS || 'http://localhost:5173,https://localhost:5173,http://127.0.0.1:5173,https://127.0.0.1:5173')
   .split(',')
@@ -66,6 +88,11 @@ app.get('/api/health', (req, res) => {
     message: 'Backend is healthy',
     timestamp: new Date().toISOString(),
   });
+});
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
 });
 
 app.use(errorMiddleware);
